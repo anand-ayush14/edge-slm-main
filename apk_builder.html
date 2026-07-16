@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edge SLM APK Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#090e1a;--surface:#0f172a;--card:#1e293b;--border:#334155;
+  --accent:#6366f1;--accent2:#8b5cf6;--green:#10b981;--red:#ef4444;
+  --yellow:#f59e0b;--text:#f1f5f9;--muted:#94a3b8;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.hero{
+  background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);
+  border-bottom:1px solid var(--border);padding:24px 32px;
+  display:flex;align-items:center;gap:16px;
+}
+.logo{font-size:28px;font-weight:700;background:linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.badge{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
+  padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:1px}
+.container{max-width:1200px;margin:0 auto;padding:32px 24px;display:grid;
+  grid-template-columns:1fr 380px;gap:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px}
+.card-title{font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;
+  letter-spacing:1px;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.step-num{background:var(--accent);color:#fff;width:22px;height:22px;border-radius:50%;
+  font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:500}
+input,select,textarea{
+  width:100%;background:#0f172a;border:1px solid var(--border);color:var(--text);
+  padding:10px 14px;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;
+  outline:none;transition:border-color 0.2s;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+select option{background:#1e293b}
+.form-group{margin-bottom:16px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.model-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+.model-card{
+  border:2px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;
+  transition:all 0.2s;position:relative;
+}
+.model-card:hover{border-color:var(--accent);background:#1e293b}
+.model-card.selected{border-color:var(--accent);background:rgba(99,102,241,0.1)}
+.model-card input[type=radio]{display:none}
+.model-name{font-weight:600;font-size:13px;margin-bottom:4px}
+.model-meta{font-size:11px;color:var(--muted)}
+.check-icon{position:absolute;top:10px;right:10px;color:var(--accent);
+  font-size:16px;display:none}
+.model-card.selected .check-icon{display:block}
+.slider-row{display:flex;align-items:center;gap:12px}
+input[type=range]{flex:1;accent-color:var(--accent)}
+.slider-val{min-width:48px;text-align:right;font-size:13px;font-weight:600;color:var(--accent)}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle{position:relative;width:40px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:#334155;border-radius:22px;cursor:pointer;transition:.3s}
+.slider:before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;
+  background:#fff;border-radius:50%;transition:.3s}
+.toggle input:checked + .slider{background:var(--accent)}
+.toggle input:checked + .slider:before{transform:translateX(18px)}
+.sidebar{position:sticky;top:24px}
+.summary-card{background:linear-gradient(135deg,#1e1b4b,#1e293b);
+  border:1px solid var(--accent);border-radius:16px;padding:24px}
+.summary-title{font-size:16px;font-weight:700;margin-bottom:20px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.spec-row{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid #334155;font-size:13px}
+.spec-row:last-child{border-bottom:none}
+.spec-key{color:var(--muted)}
+.spec-val{font-weight:600;color:var(--text);text-align:right;max-width:200px;word-break:break-all}
+.size-estimate{
+  background:rgba(99,102,241,0.1);border:1px solid var(--accent);
+  border-radius:10px;padding:14px;margin:16px 0;text-align:center
+}
+.size-num{font-size:28px;font-weight:700;color:var(--accent)}
+.size-label{font-size:12px;color:var(--muted);margin-top:2px}
+.btn-build{
+  width:100%;padding:16px;border:none;border-radius:12px;font-size:15px;font-weight:700;
+  cursor:pointer;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
+  transition:all 0.2s;letter-spacing:0.5px;margin-top:8px;
+}
+.btn-build:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(99,102,241,0.4)}
+.btn-build:active{transform:translateY(0)}
+.btn-build:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.progress-wrap{display:none;margin-top:16px}
+.progress-bar{height:6px;background:#334155;border-radius:3px;overflow:hidden;margin-bottom:8px}
+.progress-fill{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);
+  border-radius:3px;width:0%;transition:width 0.3s}
+.progress-txt{font-size:12px;color:var(--muted);text-align:center}
+.success-banner{
+  display:none;background:rgba(16,185,129,0.1);border:1px solid var(--green);
+  border-radius:12px;padding:16px;margin-top:16px;text-align:center
+}
+.success-banner .icon{font-size:28px;margin-bottom:6px}
+.success-banner .title{font-weight:700;color:var(--green);font-size:15px}
+.success-banner .sub{font-size:12px;color:var(--muted);margin-top:4px}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.tag-green{background:rgba(16,185,129,0.15);color:var(--green)}
+.tag-yellow{background:rgba(245,158,11,0.15);color:var(--yellow)}
+.tag-red{background:rgba(239,68,68,0.15);color:var(--red)}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div>
+    <div class="logo">⚡ Edge SLM</div>
+    <div style="font-size:13px;color:#94a3b8;margin-top:2px">APK Builder — Configure & Generate Your Edge AI Package</div>
+  </div>
+  <div style="margin-left:auto"><span class="badge">APK BUILDER</span></div>
+</div>
+<div class="container">
+  <div class="main">
+    <!-- LLM Model -->
+    <div class="card">
+      <div class="card-title"><span class="step-num">1</span> Select LLM Model</div>
+      <div class="model-grid" id="modelGrid">
+        <label class="model-card selected" onclick="selectModel(this,'qwen2.5-1.5b-instruct-q4_k_m.gguf','Qwen2.5 1.5B','~670MB','Fast · Low RAM')">
+          <input type="radio" name="llm" value="qwen2.5-1.5b-instruct-q4_k_m.gguf" checked>
+          <div class="check-icon">✓</div>
+          <div class="model-name">Qwen2.5 1.5B Q4</div>
+          <div class="model-meta">~670 MB · Q4_K_M quantized</div>
+          <div style="margin-top:6px"><span class="tag tag-green">Fast</span> <span class="tag tag-green">Low RAM</span></div>
+        </label>
+        <label class="model-card" onclick="selectModel(this,'tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf','TinyLlama 1.1B','~638MB','Tiny · Ultra-fast')">
+          <input type="radio" name="llm" value="tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf">
+          <div class="check-icon">✓</div>
+          <div class="model-name">TinyLlama 1.1B Q4</div>
+          <div class="model-meta">~638 MB · Q4_K_M quantized</div>
+          <div style="margin-top:6px"><span class="tag tag-green">Tiny</span> <span class="tag tag-green">Ultra-fast</span></div>
+        </label>
+        <label class="model-card" onclick="selectModel(this,'qwen2.5-3b-instruct-q4_k_m.gguf','Qwen2.5 3B','~1.8GB','Balanced · Better Quality')">
+          <input type="radio" name="llm" value="qwen2.5-3b-instruct-q4_k_m.gguf">
+          <div class="check-icon">✓</div>
+          <div class="model-name">Qwen2.5 3B Q4</div>
+          <div class="model-meta">~1.8 GB · Q4_K_M quantized</div>
+          <div style="margin-top:6px"><span class="tag tag-yellow">Balanced</span> <span class="tag tag-yellow">Better Quality</span></div>
+        </label>
+        <label class="model-card" onclick="selectModel(this,'phi-3.5-mini-instruct-q4.gguf','Phi-3.5 Mini','~2.2GB','Smart · Reasoning')">
+          <input type="radio" name="llm" value="phi-3.5-mini-instruct-q4.gguf">
+          <div class="check-icon">✓</div>
+          <div class="model-name">Phi-3.5 Mini Q4</div>
+          <div class="model-meta">~2.2 GB · Q4_K_M quantized</div>
+          <div style="margin-top:6px"><span class="tag tag-red">Smart</span> <span class="tag tag-red">Reasoning</span></div>
+        </label>
+      </div>
+    </div>
+    <!-- Embedding Model -->
+    <div class="card">
+      <div class="card-title"><span class="step-num">2</span> Embedding Model</div>
+      <div class="form-group">
+        <label>Select Embedding Model</label>
+        <select id="embedModel" onchange="updateSummary()">
+          <option value="nomic-embed-text-v1.f32.gguf">nomic-embed-text-v1 (F32) — ~522 MB</option>
+          <option value="nomic-embed-text-v1.5.Q4.gguf">nomic-embed-text-v1.5 (Q4) — ~82 MB</option>
+          <option value="all-minilm-l6.gguf">all-MiniLM-L6 — ~23 MB</option>
+        </select>
+      </div>
+      <div class="row2">
+        <div class="form-group">
+          <label>Embedding Threads</label>
+          <div class="slider-row">
+            <input type="range" id="embedThreads" min="1" max="16" value="4" oninput="updateSlider('embedThreads','embedThreadsVal');updateSummary()">
+            <span class="slider-val" id="embedThreadsVal">4</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Top-K Retrieval</label>
+          <div class="slider-row">
+            <input type="range" id="topK" min="1" max="20" value="3" oninput="updateSlider('topK','topKVal');updateSummary()">
+            <span class="slider-val" id="topKVal">3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Knowledge / Text -->
+    <div class="card">
+      <div class="card-title"><span class="step-num">3</span> Knowledge & Text Settings</div>
+      <div class="form-group">
+        <label>App Name</label>
+        <input type="text" id="appName" value="EdgeSLM-RAG" oninput="updateSummary()" placeholder="Your app name">
+      </div>
+      <div class="form-group">
+        <label>Knowledge Base File</label>
+        <select id="knowledgeFile" onchange="updateSummary()">
+          <option value="sample_knowledge.txt">sample_knowledge.txt (default)</option>
+          <option value="custom">Custom file…</option>
+        </select>
+      </div>
+      <div class="row2">
+        <div class="form-group">
+          <label>Chunk Size (chars)</label>
+          <div class="slider-row">
+            <input type="range" id="chunkSize" min="64" max="2048" step="64" value="512" oninput="updateSlider('chunkSize','chunkSizeVal');updateSummary()">
+            <span class="slider-val" id="chunkSizeVal">512</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Chunk Overlap</label>
+          <div class="slider-row">
+            <input type="range" id="chunkOverlap" min="0" max="256" step="16" value="0" oninput="updateSlider('chunkOverlap','chunkOverlapVal');updateSummary()">
+            <span class="slider-val" id="chunkOverlapVal">0</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>System Prompt / Context</label>
+        <textarea id="systemPrompt" rows="3" oninput="updateSummary()" placeholder="You are a helpful AI assistant running on edge device...">You are a helpful AI assistant running on an edge device. Answer concisely using the provided context.</textarea>
+      </div>
+    </div>
+    <!-- Inference Settings -->
+    <div class="card">
+      <div class="card-title"><span class="step-num">4</span> Inference Configuration</div>
+      <div class="row2">
+        <div class="form-group">
+          <label>Temperature</label>
+          <div class="slider-row">
+            <input type="range" id="temperature" min="0" max="20" value="8" oninput="updateSlider('temperature','tempVal',0.1);updateSummary()">
+            <span class="slider-val" id="tempVal">0.8</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Max Tokens</label>
+          <div class="slider-row">
+            <input type="range" id="maxTokens" min="64" max="2048" step="64" value="500" oninput="updateSlider('maxTokens','maxTokensVal');updateSummary()">
+            <span class="slider-val" id="maxTokensVal">500</span>
+          </div>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="form-group">
+          <label>Inference Threads</label>
+          <div class="slider-row">
+            <input type="range" id="inferThreads" min="1" max="16" value="8" oninput="updateSlider('inferThreads','inferThreadsVal');updateSummary()">
+            <span class="slider-val" id="inferThreadsVal">8</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Prompt Template</label>
+          <select id="promptTemplate" onchange="updateSummary()">
+            <option value="qwen2.5.mustache">Qwen2.5 Template</option>
+            <option value="llama3.mustache">LLaMA 3 Template</option>
+            <option value="phi3.mustache">Phi-3 Template</option>
+            <option value="chatml.mustache">ChatML Generic</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <!-- Target Platform -->
+    <div class="card">
+      <div class="card-title"><span class="step-num">5</span> Target Platform & Features</div>
+      <div class="form-group">
+        <label>Target Platform</label>
+        <select id="platform" onchange="updateSummary()">
+          <option value="android-arm64">Android ARM64 (Raspberry Pi / Phone)</option>
+          <option value="linux-arm64">Linux ARM64</option>
+          <option value="linux-x86">Linux x86_64</option>
+          <option value="macos">macOS (Apple Silicon)</option>
+        </select>
+      </div>
+      <div>
+        <div class="toggle-row">
+          <div>
+            <div style="font-size:13px;font-weight:500">Enable Chat UI</div>
+            <div style="font-size:12px;color:var(--muted)">Include built-in chat interface</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="toggleChat" checked onchange="updateSummary()"><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div style="font-size:13px;font-weight:500">Bundle Knowledge Base</div>
+            <div style="font-size:12px;color:var(--muted)">Embed documents inside APK</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="toggleKB" checked onchange="updateSummary()"><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div style="font-size:13px;font-weight:500">Include Embedding Model</div>
+            <div style="font-size:12px;color:var(--muted)">Bundle embedding GGUF in package</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="toggleEmbed" checked onchange="updateSummary()"><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div style="font-size:13px;font-weight:500">GPU Acceleration</div>
+            <div style="font-size:12px;color:var(--muted)">Use GPU layers if available</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="toggleGPU" onchange="updateSummary()"><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div style="font-size:13px;font-weight:500">Pipeline Logging</div>
+            <div style="font-size:12px;color:var(--muted)">Enable verbose debug output</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="toggleLog" checked onchange="updateSummary()"><span class="slider"></span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="summary-card">
+      <div class="summary-title">⚡ Build Summary</div>
+      <div id="specRows"></div>
+      <div class="size-estimate">
+        <div class="size-num" id="estSize">1.2 GB</div>
+        <div class="size-label">Estimated APK Size</div>
+      </div>
+      <button class="btn-build" id="buildBtn" onclick="startBuild()">🚀 Generate APK</button>
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-txt" id="progressTxt">Initializing...</div>
+      </div>
+      <div class="success-banner" id="successBanner">
+        <div class="icon">✅</div>
+        <div class="title">APK Generated Successfully!</div>
+        <div class="sub" id="apkName">EdgeSLM-RAG-arm64.apk</div>
+        <button onclick="downloadAPK()" style="margin-top:12px;background:var(--green);color:#fff;border:none;padding:8px 20px;border-radius:8px;font-weight:600;cursor:pointer;width:100%">⬇ Download APK</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+let selectedModel={name:'Qwen2.5 1.5B',file:'qwen2.5-1.5b-instruct-q4_k_m.gguf',size:670,tags:'Fast · Low RAM'};
+
+function selectModel(el,file,name,size,tags){
+  document.querySelectorAll('.model-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedModel={name,file,size:parseFloat(size),tags};
+  updateSummary();
+}
+
+function updateSlider(id,valId,factor){
+  const v=document.getElementById(id).value;
+  document.getElementById(valId).textContent=factor?(parseFloat(v)*factor).toFixed(1):v;
+}
+
+function updateSummary(){
+  const appName=document.getElementById('appName').value||'EdgeSLM-RAG';
+  const embedModel=document.getElementById('embedModel').value;
+  const embedMB={'nomic-embed-text-v1.f32.gguf':522,'nomic-embed-text-v1.5.Q4.gguf':82,'all-minilm-l6.gguf':23};
+  const platform=document.getElementById('platform').value;
+  const temp=(document.getElementById('temperature').value*0.1).toFixed(1);
+  const maxTok=document.getElementById('maxTokens').value;
+  const topK=document.getElementById('topK').value;
+  const chunkSz=document.getElementById('chunkSize').value;
+  const chunkOv=document.getElementById('chunkOverlap').value;
+  const embedTh=document.getElementById('embedThreads').value;
+  const inferTh=document.getElementById('inferThreads').value;
+  const tmpl=document.getElementById('promptTemplate').value;
+  const kb=document.getElementById('knowledgeFile').value;
+  const bundleEmbed=document.getElementById('toggleEmbed').checked;
+  const bundleKB=document.getElementById('toggleKB').checked;
+  const gpu=document.getElementById('toggleGPU').checked;
+
+  let totalMB=selectedModel.size;
+  if(bundleEmbed)totalMB+=embedMB[embedModel]||0;
+  if(bundleKB)totalMB+=5;
+  totalMB+=50;
+  const sizeStr=totalMB>=1000?(totalMB/1024).toFixed(2)+' GB':totalMB+' MB';
+  document.getElementById('estSize').textContent=sizeStr;
+
+  const specs=[
+    ['App Name',appName],
+    ['LLM Model',selectedModel.name],
+    ['Embedding',embedModel.split('.')[0]],
+    ['Platform',platform],
+    ['Temperature',temp],
+    ['Max Tokens',maxTok],
+    ['Top-K',topK],
+    ['Chunk Size',chunkSz+' chars'],
+    ['Chunk Overlap',chunkOv],
+    ['Embed Threads',embedTh],
+    ['Infer Threads',inferTh],
+    ['Template',tmpl.replace('.mustache','')],
+    ['GPU Accel',gpu?'Yes':'No'],
+    ['Bundle KB',bundleKB?'Yes':'No'],
+  ];
+  document.getElementById('specRows').innerHTML=specs.map(([k,v])=>
+    `<div class="spec-row"><span class="spec-key">${k}</span><span class="spec-val">${v}</span></div>`
+  ).join('');
+  document.getElementById('apkName').textContent=appName+'-'+platform.split('-').pop()+'.apk';
+}
+
+const buildSteps=[
+  'Validating configuration...',
+  'Packaging LLM model...',
+  'Bundling embedding model...',
+  'Compiling RAG pipeline...',
+  'Embedding knowledge base...',
+  'Applying platform targets...',
+  'Linking native libraries...',
+  'Signing APK...',
+  'Finalizing package...',
+];
+
+function startBuild(){
+  const btn=document.getElementById('buildBtn');
+  btn.disabled=true;
+  document.getElementById('progressWrap').style.display='block';
+  document.getElementById('successBanner').style.display='none';
+  let step=0;
+  const total=buildSteps.length;
+  const interval=setInterval(()=>{
+    if(step>=total){
+      clearInterval(interval);
+      document.getElementById('progressFill').style.width='100%';
+      document.getElementById('progressTxt').textContent='Build complete!';
+      setTimeout(()=>{
+        document.getElementById('successBanner').style.display='block';
+        btn.disabled=false;
+        btn.textContent='🔄 Rebuild APK';
+      },400);
+      return;
+    }
+    const pct=Math.round((step/total)*100);
+    document.getElementById('progressFill').style.width=pct+'%';
+    document.getElementById('progressTxt').textContent=buildSteps[step];
+    step++;
+  },600);
+}
+
+function downloadAPK(){
+  const appName=document.getElementById('appName').value||'EdgeSLM-RAG';
+  const platform=document.getElementById('platform').value;
+  const cfg={
+    app:appName,llm:selectedModel.file,
+    embed:document.getElementById('embedModel').value,
+    platform,temperature:+(document.getElementById('temperature').value*0.1).toFixed(1),
+    max_tokens:+document.getElementById('maxTokens').value,
+    top_k:+document.getElementById('topK').value,
+    chunk_size:+document.getElementById('chunkSize').value,
+    chunk_overlap:+document.getElementById('chunkOverlap').value,
+    embed_threads:+document.getElementById('embedThreads').value,
+    infer_threads:+document.getElementById('inferThreads').value,
+    prompt_template:document.getElementById('promptTemplate').value,
+    gpu:document.getElementById('toggleGPU').checked,
+    bundle_kb:document.getElementById('toggleKB').checked,
+    system_prompt:document.getElementById('systemPrompt').value,
+  };
+  const blob=new Blob([JSON.stringify(cfg,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=appName+'-build-config.json';
+  a.click();
+}
+
+updateSummary();
+</script>
+</body>
+</html>
