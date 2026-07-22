@@ -1,8 +1,14 @@
 from pathlib import Path
 from typing import List
 
-from langchain.docstore.document import Document
-from langchain.document_loaders import TextLoader
+try:
+    from langchain_core.documents import Document
+except ImportError:
+    from langchain.docstore.document import Document
+try:
+    from langchain_community.document_loaders import TextLoader
+except ImportError:
+    from langchain.document_loaders import TextLoader
 
 
 class DocumentReader:

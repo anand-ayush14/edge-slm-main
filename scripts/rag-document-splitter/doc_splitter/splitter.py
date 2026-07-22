@@ -2,8 +2,14 @@ import itertools
 from pathlib import Path
 from typing import Any, Callable, List
 
-from langchain.docstore.document import Document
-from langchain.text_splitter import Language, RecursiveCharacterTextSplitter
+try:
+    from langchain_core.documents import Document
+except ImportError:
+    from langchain.docstore.document import Document
+try:
+    from langchain_text_splitters import Language, RecursiveCharacterTextSplitter
+except ImportError:
+    from langchain.text_splitter import Language, RecursiveCharacterTextSplitter
 
 from doc_splitter.document_context import DocumentContext, DocumentContextMetadata
 

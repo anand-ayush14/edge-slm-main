@@ -1,0 +1,182 @@
+# ══════════════════════════════════════════════════════════════════════════════
+#  Edge SLM — Raspberry Pi Docker Image
+#  Target: Raspberry Pi 4/5  (ARM64 / aarch64)
+#
+#  Build (on Pi or via buildx):
+#    docker build -f Dockerfile.pi -t edge-slm-pi .
+#
+#  Run (with display forwarded for Tkinter GUI):
+#    xhost +local:docker
+#    docker run -it --rm \
+#      -e DISPLAY=$DISPLAY \
+#      -v /tmp/.X11-unix:/tmp/.X11-unix \
+#      -v "$PWD/models":/app/models \
+#      --name edge-slm edge-slm-pi
+#
+#  Run (headless / terminal-only — no GUI):
+#    docker run -it --rm \
+#      -v "$PWD/models":/app/models \
+#      --name edge-slm edge-slm-pi bash
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Use the official ARM64 Debian Bookworm slim image.
+# This is what Raspberry Pi OS (64-bit) is based on.
+FROM debian:bookworm-slim
+
+# ── Build-time metadata ────────────────────────────────────────────────────────
+LABEL maintainer="edge-slm"
+LABEL description="Edge SLM RAG pipeline for Raspberry Pi (ARM64)"
+LABEL architecture="arm64/aarch64"
+
+# ── Non-interactive apt installs ───────────────────────────────────────────────
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# ── Paths ──────────────────────────────────────────────────────────────────────
+ENV APP_DIR=/app
+ENV MODELS_DIR=/app/models
+ENV RAG_DIR=/app/rag
+ENV SPLITTER_DIR=/app/scripts/rag-document-splitter
+
+# ── Python path ────────────────────────────────────────────────────────────────
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/root/.local/bin:${PATH}"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 1 — System packages
+# ══════════════════════════════════════════════════════════════════════════════
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Python runtime + Tkinter (GUI)
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-tk \
+    python3-dev \
+    # Build tools (needed for Conan + llama.cpp / FAISS)
+    build-essential \
+    cmake \
+    ninja-build \
+    git \
+    pkg-config \
+    # C++ compiler — GCC 12 is the default on Bookworm
+    g++ \
+    gcc \
+    # Linear algebra (OpenBLAS) — used by llama.cpp & FAISS on ARM
+    libopenblas-dev \
+    liblapack-dev \
+    # BLAS / LAPACK runtime
+    libopenblas0 \
+    # OpenMP (parallelism for FAISS / llama.cpp)
+    libomp-dev \
+    # Boost — program_options used by the RAG binary
+    libboost-program-options-dev \
+    # Networking + cert utilities
+    curl \
+    wget \
+    ca-certificates \
+    # PDF reading (pdfminer.six)
+    libmupdf-dev \
+    mupdf-tools \
+    # Fonts for Tkinter (DejaVu family)
+    fonts-dejavu \
+    fonts-liberation \
+    # X11 client libs needed for Tkinter on Pi display / VNC
+    libx11-6 \
+    libxext6 \
+    libxrender1 \
+    libxft2 \
+    libxss1 \
+    # Misc utilities
+    zip \
+    unzip \
+    # Virtual framebuffer — run GUI over SSH/headless without a physical display
+    xvfb \
+    && rm -rf /var/lib/apt/lists/*
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 2 — Python tooling (Conan + pip)
+# ══════════════════════════════════════════════════════════════════════════════
+# Install Conan via pip (required to build the RAG C++ binary)
+RUN pip3 install --no-cache-dir --break-system-packages \
+    "conan>=2.0,<3.0" \
+    setuptools \
+    wheel
+
+# Detect and write the default Conan profile for ARM64 Linux
+RUN conan profile detect --force
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 3 — Copy source tree
+# ══════════════════════════════════════════════════════════════════════════════
+WORKDIR /app
+
+# Copy everything except large model files (handled via volume mount)
+COPY . .
+
+# Copy and make entrypoint executable
+COPY docker-entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Make sure models directory exists (will be volume-mounted at runtime)
+RUN mkdir -p /app/models
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 4 — Python venv for Document Splitter
+# ══════════════════════════════════════════════════════════════════════════════
+RUN python3 -m venv /app/scripts/rag-document-splitter/.venv && \
+    /app/scripts/rag-document-splitter/.venv/bin/pip install --no-cache-dir \
+        --upgrade pip wheel setuptools && \
+    /app/scripts/rag-document-splitter/.venv/bin/pip install --no-cache-dir \
+        -r /app/scripts/rag-document-splitter/requirements.txt
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 5 — Build RAG C++ binary via Conan
+#
+#  This step compiles:
+#    • llama.cpp  (LLM inference)
+#    • FAISS      (vector search)
+#    • fmt / spdlog / nlohmann_json / boost / mustache / magic_enum
+#    • rag_demo   (the main binary called by edge-slm-pi.py)
+#
+#  On Raspberry Pi hardware this takes ~20 minutes.
+#  Pre-build the image on a fast arm64 machine and push to a registry,
+#  or use Docker buildx with a Pi or QEMU arm64 runner.
+# ══════════════════════════════════════════════════════════════════════════════
+WORKDIR /app/rag
+
+# Switch to bash (Debian default is dash which doesn't support pipefail)
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# Install local Conan recipes (OpenBLAS, faiss, llamacpp) using the bundled script.
+# This mirrors exactly what install_packages.bash does:
+#   - faiss/all/  and OpenBLAS/all/  use a nested "all" layout
+#   - llamacpp/ has conanfile.py directly
+# Must cd into conan/ first — install_packages.bash uses relative pushd/popd
+# (pushd recipes expects to be run from within the conan/ directory)
+RUN cd conan && bash install_packages.bash 2>&1 | tee /tmp/conan_recipes.log
+
+# Build the RAG binary (--build=missing downloads & builds any missing packages)
+RUN conan build . \
+        --profile=default \
+        --build=missing \
+    2>&1 | tee /tmp/conan_build.log
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STAGE 6 — Runtime configuration
+# ══════════════════════════════════════════════════════════════════════════════
+WORKDIR /app
+
+# Set LD_LIBRARY_PATH so the rag_demo binary can find its shared libraries
+# Use two separate ENV statements so the variable expansion works correctly
+ENV LD_LIBRARY_PATH_BASE=/app/rag/build/Release
+ENV LD_LIBRARY_PATH=/app/rag/build/Release
+
+# Expose models as a named volume so the user can mount .gguf files
+VOLUME ["/app/models"]
+
+# ── Entrypoint ────────────────────────────────────────────────────────────────
+# entrypoint.sh auto-starts Xvfb if no DISPLAY is set
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+# Default: launch the Tkinter GUI
+CMD ["python3", "raspberry-pi/edge-slm-pi.py"]

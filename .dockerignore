@@ -1,0 +1,20 @@
+# ── Model files (large .gguf — mount via volume at runtime) ───────────────────
+models/*.gguf
+models/*.bin
+models/*.safetensors
+
+# ── Build artifacts ────────────────────────────────────────────────────────────
+rag/build/
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# ── Git / IDE ──────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+.DS_Store
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
