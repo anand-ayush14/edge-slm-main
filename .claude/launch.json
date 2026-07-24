@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tinyml-ui",
+      "runtimeExecutable": "/tmp/tinyml_venv_test/bin/streamlit",
+      "runtimeArgs": ["run", "app.py", "--server.headless", "true"],
+      "port": 8501
+    }
+  ]
+}

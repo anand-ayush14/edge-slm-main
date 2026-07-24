@@ -1,4 +1,4 @@
-# ⚡ Edge SLM — Raspberry Pi Edition
+# ⚡ TinyML — Raspberry Pi Edition
 
 > **Local AI chat on your Pi — no internet, no cloud, fully private.**
 > Uses **TinyLlama 1.1B** (smallest model, ~638 MB) with a RAG pipeline
@@ -11,9 +11,9 @@
 | Feature | Details |
 |---|---|
 | **Model** | TinyLlama 1.1B Q4_K_M — runs on 1 GB+ RAM |
-| **UI** | Tkinter desktop app, optimised for Pi touchscreen |
+| **UI** | Streamlit web app — opens in your browser, no X11 needed |
 | **RAG** | Chunk docs → embed → chat with context |
-| **Launcher** | Double-click icon on Desktop or App Menu |
+| **Launcher** | Double-click icon on Desktop or App Menu (opens browser automatically) |
 | **Offline** | 100% local — no API keys, no internet needed |
 
 ---
@@ -34,22 +34,22 @@
 ### Option A: USB Drive
 ```bash
 # On your Mac — copy to USB
-cp -r ~/Desktop/edge-slm-main /Volumes/YOUR_USB/
+cp -r ~/Desktop/tinyml /Volumes/YOUR_USB/
 
 # On your Pi — paste from USB
-cp -r /media/pi/YOUR_USB/edge-slm-main ~/
+cp -r /media/pi/YOUR_USB/tinyml ~/
 ```
 
 ### Option B: SCP over WiFi
 ```bash
 # Run this on your Mac
-scp -r ~/Desktop/edge-slm-main pi@raspberrypi.local:~/
+scp -r ~/Desktop/tinyml pi@raspberrypi.local:~/
 ```
 
 ### Option C: Git
 ```bash
 # On your Pi
-git clone https://github.com/YOUR_USERNAME/edge-slm-main ~/edge-slm-main
+git clone https://github.com/YOUR_USERNAME/tinyml ~/tinyml
 ```
 
 ---
@@ -59,13 +59,13 @@ git clone https://github.com/YOUR_USERNAME/edge-slm-main ~/edge-slm-main
 Open a terminal on your Pi and run:
 
 ```bash
-cd ~/edge-slm-main
+cd ~/tinyml
 bash raspberry-pi/install.sh
 ```
 
 The installer will:
 1. ✅ Detect your Pi model and RAM
-2. ✅ Install Python, Tkinter, CMake, Conan via `apt`
+2. ✅ Install Python, CMake, Conan via `apt`, and Streamlit via `pip`
 3. ✅ Create a swap file if RAM < 2 GB
 4. ✅ **Build the RAG binary for ARM** (takes 10–20 min, one time)
 5. ✅ Set up the Python venv for document splitting
@@ -77,14 +77,17 @@ The installer will:
 
 ## Step 3 — Launch the App
 
-After installation, you can launch Edge SLM in any of these ways:
+After installation, you can launch TinyML in any of these ways:
 
 | Method | How |
 |---|---|
-| **Desktop icon** | Double-click `Edge SLM` on your Desktop |
-| **App Menu** | Applications → Education (or Science) → Edge SLM |
-| **Terminal** | `python3 ~/edge-slm-main/raspberry-pi/edge-slm-pi.py` |
-| **Shell** | `bash ~/edge-slm-main/raspberry-pi/launch.sh` |
+| **Desktop icon** | Double-click `TinyML` on your Desktop (opens browser automatically) |
+| **App Menu** | Applications → Education (or Science) → TinyML |
+| **Terminal** | `cd ~/tinyml && python3 -m streamlit run app.py` |
+| **Shell** | `bash ~/tinyml/raspberry-pi/launch.sh` |
+
+Then open **http://localhost:8501** in a browser if it doesn't open automatically
+(or `http://<pi-ip-address>:8501` from another device on the same network).
 
 ---
 
@@ -105,7 +108,7 @@ The app has three steps — run them in order:
 ### ③ Chat
 - Click **▶ Start Chat Session**
 - Switch to the **💬 Chat** tab
-- Type your question and press **Enter** or **Send ↩**
+- Type your question in the chat box and press **Enter**
 - Wait 30–90 seconds for TinyLlama to respond
 
 ### 🚀 Run Full Pipeline
@@ -142,14 +145,14 @@ Both files must be in the `models/` folder. They are already there if you copied
 ```bash
 # Make the launcher executable
 chmod +x ~/Desktop/Edge\ SLM.desktop
-# Or run directly
-python3 ~/edge-slm-main/raspberry-pi/edge-slm-pi.py
+# Or run directly, then open http://localhost:8501 in a browser
+cd ~/tinyml && python3 -m streamlit run app.py
 ```
 
 ### "RAG binary not found" error
 ```bash
 # Rebuild manually
-cd ~/edge-slm-main/rag
+cd ~/tinyml/rag
 conan build . --build=missing
 ```
 
@@ -173,12 +176,12 @@ sudo dphys-swapfile swapon
 
 To remove desktop shortcuts (keeps all files):
 ```bash
-bash ~/edge-slm-main/raspberry-pi/uninstall.sh
+bash ~/tinyml/raspberry-pi/uninstall.sh
 ```
 
 To remove everything:
 ```bash
-rm -rf ~/edge-slm-main
+rm -rf ~/tinyml
 ```
 
 ---
@@ -186,12 +189,11 @@ rm -rf ~/edge-slm-main
 ## File Structure
 
 ```
-edge-slm-main/
+tinyml/
 ├── raspberry-pi/
 │   ├── install.sh          ← Run this first!
 │   ├── uninstall.sh        ← Cleanup shortcuts
-│   ├── edge-slm-pi.py      ← Pi-optimised UI
-│   ├── edge-slm.desktop    ← App menu template
+│   ├── tinyml.desktop    ← App menu template
 │   ├── icon.png            ← App icon
 │   └── README_PI.md        ← This file
 ├── models/
@@ -201,5 +203,5 @@ edge-slm-main/
 │   └── model_config.json
 ├── rag/                    ← C++ RAG engine (built by install.sh)
 ├── scripts/                ← Python document splitter
-└── ui.py                   ← Original macOS UI
+└── app.py                  ← Streamlit web UI (same app on desktop, Pi, and Docker)
 ```

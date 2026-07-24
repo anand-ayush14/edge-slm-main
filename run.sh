@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────
-#  Edge SLM · One-command launcher
+#  TinyML · One-command launcher
 #  Usage:  ./run.sh
 # ─────────────────────────────────────────────────────────────
 set -e
 cd "$(dirname "$0")"
 
 echo ""
-echo "  ⚡ Edge SLM RAG Pipeline"
+echo "  ⚡ TinyML RAG Pipeline"
 echo "  ─────────────────────────────────────"
 
 # ── 1. Check Python ──────────────────────────────────────────
@@ -18,11 +18,11 @@ fi
 
 PYTHON=python3
 
-# ── 2. Ensure pip deps for the UI ────────────────────────────
+# ── 2. Ensure Streamlit UI dependency ────────────────────────
 echo "  ► Checking UI dependencies…"
-$PYTHON -c "import tkinter" 2>/dev/null || {
-  echo "  ✗ tkinter is missing. On macOS install via: brew install python-tk"
-  exit 1
+$PYTHON -c "import streamlit" 2>/dev/null || {
+  echo "  ► Installing Streamlit…"
+  $PYTHON -m pip install --quiet -r requirements.txt
 }
 
 # ── 3. Ensure splitter venv exists ───────────────────────────
@@ -47,7 +47,7 @@ if [ ! -f "$RAG_BIN" ]; then
   echo "  The UI will still open but embedding/chat steps will fail."
 fi
 
-# ── 5. Launch Tkinter UI ──────────────────────────────────────
-echo "  ► Launching Edge SLM UI…"
+# ── 5. Launch Streamlit UI ─────────────────────────────────────
+echo "  ► Launching TinyML UI at http://localhost:8501 …"
 echo ""
-$PYTHON ui.py
+$PYTHON -m streamlit run app.py

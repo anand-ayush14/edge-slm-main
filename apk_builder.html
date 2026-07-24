@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Edge SLM APK Builder</title>
+<title>TinyML APK Builder</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -111,7 +111,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
 <body>
 <div class="hero">
   <div>
-    <div class="logo">⚡ Edge SLM</div>
+    <div class="logo">⚡ TinyML</div>
     <div style="font-size:13px;color:#94a3b8;margin-top:2px">APK Builder — Configure & Generate Your Edge AI Package</div>
   </div>
   <div style="margin-left:auto"><span class="badge">APK BUILDER</span></div>
@@ -185,7 +185,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
       <div class="card-title"><span class="step-num">3</span> Knowledge & Text Settings</div>
       <div class="form-group">
         <label>App Name</label>
-        <input type="text" id="appName" value="EdgeSLM-RAG" oninput="updateSummary()" placeholder="Your app name">
+        <input type="text" id="appName" value="TinyML-RAG" oninput="updateSummary()" placeholder="Your app name">
       </div>
       <div class="form-group">
         <label>Knowledge Base File</label>
@@ -321,7 +321,7 @@ input[type=range]{flex:1;accent-color:var(--accent)}
       <div class="success-banner" id="successBanner">
         <div class="icon">✅</div>
         <div class="title">APK Generated Successfully!</div>
-        <div class="sub" id="apkName">EdgeSLM-RAG-arm64.apk</div>
+        <div class="sub" id="apkName">TinyML-RAG-arm64.apk</div>
         <button onclick="downloadAPK()" style="margin-top:12px;background:var(--green);color:#fff;border:none;padding:8px 20px;border-radius:8px;font-weight:600;cursor:pointer;width:100%">⬇ Download APK</button>
       </div>
     </div>
@@ -343,7 +343,7 @@ function updateSlider(id,valId,factor){
 }
 
 function updateSummary(){
-  const appName=document.getElementById('appName').value||'EdgeSLM-RAG';
+  const appName=document.getElementById('appName').value||'TinyML-RAG';
   const embedModel=document.getElementById('embedModel').value;
   const embedMB={'nomic-embed-text-v1.f32.gguf':522,'nomic-embed-text-v1.5.Q4.gguf':82,'all-minilm-l6.gguf':23};
   const platform=document.getElementById('platform').value;
@@ -428,7 +428,7 @@ function startBuild(){
 }
 
 function downloadAPK(){
-  const appName=document.getElementById('appName').value||'EdgeSLM-RAG';
+  const appName=document.getElementById('appName').value||'TinyML-RAG';
   const platform=document.getElementById('platform').value;
   const cfg={
     app:appName,llm:selectedModel.file,

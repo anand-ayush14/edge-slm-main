@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ══════════════════════════════════════════════════════════════════════════════
-#  Edge SLM — Raspberry Pi Uninstaller
+#  TinyML — Raspberry Pi Uninstaller
 #  Removes desktop shortcuts and launcher. Does NOT delete models or binaries.
 #  Run:  bash uninstall.sh
 # ══════════════════════════════════════════════════════════════════════════════
@@ -11,7 +11,7 @@ G="\033[0;32m"; Y="\033[0;33m"; R="\033[0;31m"; C="\033[0;36m"; N="\033[0m"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo ""
-echo -e "${C}  ⚡ Edge SLM — Uninstaller${N}"
+echo -e "${C}  ⚡ TinyML — Uninstaller${N}"
 echo ""
 
 remove() {
@@ -22,8 +22,8 @@ remove() {
   fi
 }
 
-remove "$HOME/.local/share/applications/edge-slm.desktop"
-remove "$HOME/Desktop/Edge SLM.desktop"
+remove "$HOME/.local/share/applications/tinyml.desktop"
+remove "$HOME/Desktop/TinyML.desktop"
 remove "$SCRIPT_DIR/launch.sh"
 
 update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
