@@ -1,5 +1,9 @@
 # TinyML — RAG Pipeline for Small Language Models
 
+> **Credit:** This project is based on [deepsense.ai](https://deepsense.ai)'s open-source RAG pipeline for small language models (MIT License). The demo GIFs and the core C++ RAG library are from the original project.
+>
+> **My contributions (Ayush Anand):** Streamlit web UI (`app.py`), Raspberry Pi edition (installer, desktop launcher, TinyLlama 1.1B Q4 setup), Docker setup (`Dockerfile.pi`), and latency/UI fixes.
+
 This project is a native implementation of a RAG pipeline. The main goal was to fit the whole RAG pipeline into a resource constrained device, such as smartphone.
 By design the provided RAG library should be deployable on various platforms. There is also a terminal demo application to check how does the pipeline works.
 
